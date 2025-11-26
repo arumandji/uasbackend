@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: prestasi
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:6
+    restart: always
+    volumes:
+      - mongodata:/data/db
+    ports:
+      - "27017:27017"
+
+  app:
+    build: .
+    depends_on:
+      - postgres
+      - mongo
+    environment:
+      - POSTGRES_DSN=${POSTGRES_DSN}
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - UPLOAD_DIR=${UPLOAD_DIR}
+    ports:
+      - "${PORT}:8080"
+    volumes:
+      - ./:/app
+
+volumes:
+  pgdata:
+  mongodata:
