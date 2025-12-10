@@ -1,12 +1,15 @@
 package config
 
 import (
-    "github.com/joho/godotenv"
-    "log"
+	"log"
+
+	"github.com/joho/godotenv"
 )
 
-func Load() {
-    if err := godotenv.Load(); err != nil {
-        log.Println(".env not found, using env variables")
-    }
+// LoadEnv loads variables from .env file
+func LoadEnv() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("⚠️ .env file not found, using system environment variables...")
+	}
 }

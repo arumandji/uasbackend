@@ -1,20 +1,29 @@
 package database
 
 import (
-    "log"
-    "os"
+	"fmt"
+	"log"
+	"os"
 
-    "github.com/jmoiron/sqlx"
-    _ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var DB *sqlx.DB
+var DB *gorm.DB
 
+// ConnectPostgres initializes PostgreSQL connection using GORM
 func ConnectPostgres() {
-    dsn := os.Getenv("POSTGRES_DSN")
-    db, err := sqlx.Connect("postgres", dsn)
-    if err != nil {
-        log.Fatalf("postgres connect err: %v", err)
-    }
-    DB = db
+	dsn := os.Getenv("POSTGRES_DSN")
+
+	if dsn == "" {
+		log.Fatal("❌ Missing POSTGRES_DSN in .env")
+	}
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("❌ Failed to connect to PostgreSQL:", err)
+	}
+
+	DB = db
+	fmt.Println("✔️ PostgreSQL connected")
 }
