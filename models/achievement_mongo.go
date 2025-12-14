@@ -5,7 +5,7 @@ import "time"
 // Mongo model for achievements (dynamic details as map[string]interface{})
 type Achievement struct {
 	ID              string                 `bson:"_id,omitempty" json:"id"`
-	MahasiswaID       string                 `bson:"mahasiswaId" json:"mahasiswa_id"`
+	MahasiswaID     string                 `bson:"mahasiswaId" json:"mahasiswa_id"`
 	AchievementType string                 `bson:"achievementType" json:"achievement_type"`
 	Title           string                 `bson:"title" json:"title"`
 	Description     string                 `bson:"description" json:"description"`

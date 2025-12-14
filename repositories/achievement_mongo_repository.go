@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"errors"
 	"time"
 	"uas_backend/database"
 	"uas_backend/models"

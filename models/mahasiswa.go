@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type Student struct {
+type Mahasiswa struct {
 	ID           string    `gorm:"type:uuid;primaryKey" json:"id"`
 	UserID       string    `gorm:"type:uuid;not null;unique" json:"user_id"`
 	MahasiswaID    string    `gorm:"size:20;unique;not null" json:"mahasiswa_id"`
