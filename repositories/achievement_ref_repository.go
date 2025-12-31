@@ -49,3 +49,7 @@ func (r *achRefRepo) Update(ref *models.AchievementReference) error {
 	ref.UpdatedAt = time.Now()
 	return r.db.Save(ref).Error
 }
+
+func (r *achRefRepo) Delete(id uint) error {
+	return r.db.Delete(&models.Achievement{}, id).Error
+}

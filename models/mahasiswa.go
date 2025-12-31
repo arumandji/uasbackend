@@ -1,13 +1,18 @@
 package models
 
-import "time"
+import (
+)
 
 type Mahasiswa struct {
-	ID           string    `gorm:"type:uuid;primaryKey" json:"id"`
-	UserID       string    `gorm:"type:uuid;not null;unique" json:"user_id"`
-	MahasiswaID    string    `gorm:"size:20;unique;not null" json:"mahasiswa_id"`
-	ProgramStudy string    `gorm:"size:100" json:"program_study"`
-	AcademicYear string    `gorm:"size:10" json:"academic_year"`
-	AdvisorID    string    `gorm:"type:uuid" json:"advisor_id"` // lecturer id
-	CreatedAt    time.Time `json:"created_at"`
+	ID           string    	`gorm:"type:uuid;primaryKey" json:"id"`
+	UserID       string    	`gorm:"not null;unique" json:"user_id"`
+	NIM          string 	`gorm:"column:nim;size:20;not null" json:"nim"`
+	NamaMhs      string 	`gorm:"column:nama_mhs;size:100" json:"nama_mhs"`
+	Angkatan     string    	`gorm:"column:angkatan" json:"angkatan"`
+	DosenWaliID  uint   	`gorm:"column:dosen_wali_id" json:"dosen_wali_id"`
+	Prodi        string 	`gorm:"column:prodi;size:100" json:"prodi"`
+}
+
+func (Mahasiswa) TableName() string {
+	return "mahasiswa"
 }

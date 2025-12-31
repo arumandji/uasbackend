@@ -2,19 +2,20 @@ package models
 
 import "time"
 
+func (Achievement) TableName() string {
+	return "prestasi" // atau "prestasi"
+}
+
 // Mongo model for achievements (dynamic details as map[string]interface{})
 type Achievement struct {
-	ID              string                 `bson:"_id,omitempty" json:"id"`
-	MahasiswaID     string                 `bson:"mahasiswaId" json:"mahasiswa_id"`
-	AchievementType string                 `bson:"achievementType" json:"achievement_type"`
-	Title           string                 `bson:"title" json:"title"`
-	Description     string                 `bson:"description" json:"description"`
-	Details         map[string]interface{} `bson:"details,omitempty" json:"details"`
-	Attachments     []Attachment           `bson:"attachments,omitempty" json:"attachments"`
-	Tags            []string               `bson:"tags,omitempty" json:"tags"`
-	Points          *int                   `bson:"points,omitempty" json:"points"`
-	CreatedAt       time.Time              `bson:"createdAt" json:"created_at"`
-	UpdatedAt       time.Time              `bson:"updatedAt" json:"updated_at"`
+	ID          uint   `gorm:"primaryKey" json:"id"`
+	MahasiswaID string   `gorm:"column:mahasiswa_id" json:"mahasiswa_id"`
+	Judul       string `gorm:"column:judul" json:"judul"`
+	Tingkat     string `gorm:"column:tingkat" json:"tingkat"`
+	Kategori    string `gorm:"column:kategori" json:"kategori"`
+	Tahun       int    `gorm:"column:tahun" json:"tahun"`
+	Status      string `gorm:"column:status" json:"status"`       // submitted / verified / rejected
+	Keterangan  string `gorm:"column:keterangan" json:"keterangan"` // alasan reject
 }
 
 type Attachment struct {

@@ -1,11 +1,15 @@
 package models
 
-import "time"
+import (
+)
 
 type Dosen struct {
-	ID         string    `gorm:"type:uuid;primaryKey" json:"id"`
-	UserID     string    `gorm:"type:uuid;not null;unique" json:"user_id"`
-	DosenID string    `gorm:"size:20;unique;not null" json:"dosen_id"`
-	Department string    `gorm:"size:100" json:"department"`
-	CreatedAt  time.Time `json:"created_at"`
+	ID         string    `gorm:"primaryKey" json:"id"`
+	UserID     string    `gorm:"not null;unique" json:"user_id"`
+	NIDN       string 	`gorm:"column:nidn;size:20;not null" json:"nidn"`
+	NamaDosen  string 	`gorm:"column:nama_dosen;size:100" json:"nama_dosen"`
+}
+
+func (Dosen) TableName() string {
+	return "dosen"
 }

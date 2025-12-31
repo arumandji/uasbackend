@@ -12,7 +12,9 @@ type DosenRepository interface {
 	ListAll() ([]models.Dosen, error)
 	Create(d *models.Dosen) error
 	Update(d *models.Dosen) error
+	Delete(id uint) error
 }
+
 
 type dosenRepo struct {
 	db *gorm.DB
@@ -52,4 +54,9 @@ func (r *dosenRepo) Create(l *models.Dosen) error {
 
 func (r *dosenRepo) Update(l *models.Dosen) error {
 	return r.db.Save(l).Error
+}
+
+func (r *dosenRepo) Delete(id uint) error {
+	result := r.db.Delete(&models.Dosen{}, id)
+    return result.Error
 }

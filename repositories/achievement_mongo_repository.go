@@ -2,114 +2,88 @@ package repositories
 
 import (
 	"context"
-	"time"
-	"uas_backend/database"
-	"uas_backend/models"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type AchievementMongoRepository interface {
-	Create(a *models.Achievement) (string, error)
-	FindByID(id string) (*models.Achievement, error)
-	Update(id string, update bson.M) error
-	SoftDelete(id string) error
-	ListByMahasiswaIDs(mahasiswaIDs []string, offset, limit int64) ([]models.Achievement, error)
-	AggregateStats() (bson.M, error)
+type AchievementMongoRepository struct {
+	collection *mongo.Collection
 }
 
-type achMongoRepo struct {
-	coll *database.MongoCollection // note: we will access database.MongoDB in impl
+func NewAchievementMongoRepository(col *mongo.Collection) *AchievementMongoRepository {
+	return &AchievementMongoRepository{collection: col}
 }
 
-func NewAchievementMongoRepository() AchievementMongoRepository {
-	coll := database.MongoDB.Collection("achievements")
-	return &achMongoRepo{coll: coll}
-}
-
-func (r *achMongoRepo) Create(a *models.Achievement) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	a.CreatedAt = time.Now()
-	a.UpdatedAt = a.CreatedAt
-	res, err := r.coll.InsertOne(ctx, a)
-	if err != nil {
-		return "", err
-	}
-	oid := res.InsertedID.(primitive.ObjectID)
-	return oid.Hex(), nil
-}
-
-func (r *achMongoRepo) FindByID(id string) (*models.Achievement, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
-	var a models.Achievement
-	if err := r.coll.FindOne(ctx, bson.M{"_id": oid}).Decode(&a); err != nil {
-		return nil, err
-	}
-	return &a, nil
-}
-
-func (r *achMongoRepo) Update(id string, update bson.M) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-	_, err = r.coll.UpdateOne(ctx, bson.M{"_id": oid}, bson.M{"$set": update})
+// CREATE
+func (r *AchievementMongoRepository) Create(ctx context.Context, data interface{}) error {
+	_, err := r.collection.InsertOne(ctx, data)
 	return err
 }
 
-func (r *achMongoRepo) SoftDelete(id string) error {
-	// We'll mark deleted by setting a field "deleted": true
-	return r.Update(id, bson.M{"deleted": true, "updatedAt": time.Now()})
-}
-
-func (r *achMongoRepo) ListByMahasiswaIDs(mahasiswaIDs []string, offset, limit int64) ([]models.Achievement, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	filter := bson.M{"mahasiswaId": bson.M{"$in": mahasiswaIDs}, "deleted": bson.M{"$ne": true}}
-	opts := options.Find().SetSkip(offset).SetLimit(limit).SetSort(bson.M{"createdAt": -1})
-	cursor, err := r.coll.Find(ctx, filter, opts)
+// FIND ALL
+func (r *AchievementMongoRepository) FindAll(ctx context.Context) ([]bson.M, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
-	var out []models.Achievement
-	if err := cursor.All(ctx, &out); err != nil {
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
-	return out, nil
+	return results, nil
 }
 
-func (r *achMongoRepo) AggregateStats() (bson.M, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+// FIND BY ID
+func (r *AchievementMongoRepository) FindByID(ctx context.Context, id string) (bson.M, error) {
+	var result bson.M
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&result)
+	return result, err
+}
 
-	pipeline := mongoPipelineForStats()
-	cursor, err := r.coll.Aggregate(ctx, pipeline)
+// AGGREGATE STATS (SEDERHANA)
+func (r *AchievementMongoRepository) AggregateStats(ctx context.Context) ([]bson.M, error) {
+	pipeline := []bson.M{
+		{
+			"$group": bson.M{
+				"_id":   "$kategori",
+				"total": bson.M{"$sum": 1},
+			},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
+	defer cursor.Close(ctx)
+
 	var result []bson.M
 	if err := cursor.All(ctx, &result); err != nil {
 		return nil, err
 	}
-	if len(result) == 0 {
-		return bson.M{}, nil
-	}
-	return result[0], nil
+	return result, nil
 }
 
-func mongoPipelineForStats() mongo.Pipeline {
-	return mongo.Pipeline{
-		{{"$match", bson.D{{"deleted", bson.D{{"$ne", true}}}}}},
-		{{"$group", bson.D{{"_id", "$achievementType"}, {"count", bson.D{{"$sum", 1}}}}}},
-	}
+// UPDATE
+func (r *AchievementMongoRepository) Update(ctx context.Context, data interface{}) error { {
+	achievement, ok := data.(bson.M)
+	if !ok {
+		return mongo.ErrNilDocument
+	}	
+	id, ok := achievement["_id"].(string)
+	if !ok {
+		return mongo.ErrNilDocument
+	}	
+	_, err := r.collection.ReplaceOne(ctx, bson.M{"_id": id}, achievement)
+	return err
+}
+}
+
+// DELETE
+func (r *AchievementMongoRepository) Delete(ctx context.Context, id uint) error {
+	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})			
+	return err
 }

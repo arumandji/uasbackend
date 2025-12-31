@@ -46,7 +46,7 @@ func (s *authService) Login(username, password string) (string, *models.User, er
 	if !u.IsActive {
 		return "", nil, errors.New("user not active")
 	}
-	if err := s.CheckPassword(u.PasswordHash, password); err != nil {
+	if err := s.CheckPassword(u.Password, password); err != nil {
 		return "", nil, errors.New("invalid credentials")
 	}
 	// Build token

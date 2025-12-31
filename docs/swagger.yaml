@@ -1,0 +1,891 @@
+basePath: /api
+definitions:
+  models.Achievement:
+    properties:
+      id:
+        type: integer
+      judul:
+        type: string
+      kategori:
+        type: string
+      keterangan:
+        description: alasan reject
+        type: string
+      mahasiswa_id:
+        type: string
+      status:
+        description: submitted / verified / rejected
+        type: string
+      tahun:
+        type: integer
+      tingkat:
+        type: string
+    type: object
+  models.Dosen:
+    properties:
+      id:
+        type: string
+      nama_dosen:
+        type: string
+      nidn:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.Mahasiswa:
+    properties:
+      angkatan:
+        type: string
+      dosen_wali_id:
+        type: integer
+      id:
+        type: string
+      nama_mhs:
+        type: string
+      nim:
+        type: string
+      prodi:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.User:
+    properties:
+      id:
+        type: string
+      is_active:
+        type: boolean
+      nama:
+        type: string
+      password:
+        type: string
+      role_id:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: arum@mail.com
+    name: Arum
+  description: API Sistem Prestasi Mahasiswa
+  title: UAS Backend API
+  version: "1.0"
+paths:
+  /v1/achievements:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Achievement'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get my achievements
+      tags:
+      - Achievement
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Judul Achievement
+        in: formData
+        name: judul
+        required: true
+        type: string
+      - description: Tingkat Achievement
+        in: formData
+        name: tingkat
+        required: true
+        type: string
+      - description: Kategori Achievement
+        in: formData
+        name: kategori
+        required: true
+        type: string
+      - description: Tahun Achievement
+        in: formData
+        name: tahun
+        required: true
+        type: integer
+      - description: Keterangan / Alasan Reject
+        in: formData
+        name: keterangan
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Achievement'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create achievement
+      tags:
+      - Achievement
+  /v1/achievements/{id}:
+    delete:
+      description: Delete achievement by ID
+      parameters:
+      - description: Achievement ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete achievement
+      tags:
+      - Achievement
+    put:
+      consumes:
+      - application/json
+      description: Update achievement by ID
+      parameters:
+      - description: Achievement ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Achievement Data
+        in: body
+        name: achievement
+        required: true
+        schema:
+          $ref: '#/definitions/models.Achievement'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update achievement
+      tags:
+      - Achievement
+  /v1/achievements/{id}/reject:
+    post:
+      description: Reject an achievement submission
+      parameters:
+      - description: Achievement ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Reject achievement
+      tags:
+      - Achievement
+  /v1/achievements/{id}/verify:
+    post:
+      description: Verify an achievement submission
+      parameters:
+      - description: Achievement ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Verify achievement
+      tags:
+      - Achievement
+  /v1/auth/login:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Login dan mendapatkan JWT token
+      parameters:
+      - description: Username
+        in: formData
+        name: username
+        required: true
+        type: string
+      - description: Password
+        in: formData
+        name: password
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - Auth
+  /v1/auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - Auth
+  /v1/auth/profile:
+    get:
+      description: Get current user profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get profile
+      tags:
+      - Auth
+  /v1/auth/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Refresh token
+      tags:
+      - Auth
+  /v1/dosen:
+    get:
+      description: Mengambil seluruh data dosen
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Dosen'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all dosen
+      tags:
+      - Dosen
+    post:
+      consumes:
+      - multipart/form-data
+      description: Membuat data dosen baru
+      parameters:
+      - description: User ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: NIDN Dosen
+        in: formData
+        name: nidn
+        required: true
+        type: string
+      - description: Nama Dosen
+        in: formData
+        name: nama_dosen
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Dosen'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create dosen
+      tags:
+      - Dosen
+  /v1/dosen/{id}:
+    delete:
+      description: Delete dosen by ID
+      parameters:
+      - description: Dosen ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete dosen
+      tags:
+      - Dosen
+    get:
+      description: Mengambil detail dosen berdasarkan ID
+      parameters:
+      - description: Dosen ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Dosen'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get detail dosen
+      tags:
+      - Dosen
+    put:
+      consumes:
+      - application/json
+      description: Update dosen information
+      parameters:
+      - description: Dosen ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dosen Data
+        in: body
+        name: dosen
+        required: true
+        schema:
+          $ref: '#/definitions/models.Dosen'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update dosen
+      tags:
+      - Dosen
+  /v1/dosen/user/{user_id}:
+    get:
+      description: Mengambil data dosen berdasarkan user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Dosen'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get dosen by user ID
+      tags:
+      - Dosen
+  /v1/mahasiswa:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Membuat data mahasiswa baru
+      parameters:
+      - description: User ID
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: NIM Mahasiswa
+        in: formData
+        name: nim
+        required: true
+        type: string
+      - description: Nama Mahasiswa
+        in: formData
+        name: nama_mhs
+        required: true
+        type: string
+      - description: Angkatan
+        in: formData
+        name: angkatan
+        required: true
+        type: integer
+      - description: Program Studi
+        in: formData
+        name: prodi
+        required: true
+        type: string
+      - description: ID Dosen Wali
+        in: formData
+        name: dosen_wali_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Mahasiswa'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create mahasiswa
+      tags:
+      - Mahasiswa
+  /v1/mahasiswa/{id}:
+    delete:
+      description: Menghapus data mahasiswa berdasarkan ID
+      parameters:
+      - description: Mahasiswa ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete mahasiswa
+      tags:
+      - Mahasiswa
+    get:
+      description: Mengambil detail mahasiswa berdasarkan ID
+      parameters:
+      - description: Mahasiswa ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Mahasiswa'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get detail mahasiswa
+      tags:
+      - Mahasiswa
+    put:
+      consumes:
+      - application/json
+      description: Mengupdate data mahasiswa berdasarkan ID
+      parameters:
+      - description: Mahasiswa ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Mahasiswa Data
+        in: body
+        name: mahasiswa
+        required: true
+        schema:
+          $ref: '#/definitions/models.Mahasiswa'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update mahasiswa
+      tags:
+      - Mahasiswa
+  /v1/mahasiswa/advisor/{dosen_wali_id}:
+    get:
+      description: Mengambil daftar mahasiswa berdasarkan dosen wali
+      parameters:
+      - description: Dosen Wali ID
+        in: path
+        name: Dosen_wali_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Mahasiswa'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get mahasiswa bimbingan dosen
+      tags:
+      - Mahasiswa
+  /v1/mahasiswa/user/{user_id}:
+    get:
+      description: Mengambil data mahasiswa berdasarkan user ID
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Mahasiswa'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get mahasiswa by user ID
+      tags:
+      - Mahasiswa
+  /v1/reports/statistics:
+    get:
+      description: Retrieve various statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get statistics
+      tags:
+      - Report
+  /v1/users/:
+    get:
+      description: Retrieve a list of all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - User
+  /v1/users/{id}:
+    delete:
+      description: Delete user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Update user information by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - User
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

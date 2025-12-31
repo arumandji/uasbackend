@@ -9,6 +9,8 @@ type UserService interface {
 	CreateUser(u *models.User, plainPassword string) error
 	GetUserByID(id string) (*models.User, error)
 	ListUsers(offset, limit int) ([]models.User, error)
+	UpdateUser(u *models.User) error
+	DeleteUser(id uint) error
 }
 
 type userService struct {
@@ -25,7 +27,7 @@ func (s *userService) CreateUser(u *models.User, plainPassword string) error {
 	if err != nil {
 		return err
 	}
-	u.PasswordHash = hash
+	u.Password = hash
 	return s.userRepo.Create(u)
 }
 
@@ -35,4 +37,12 @@ func (s *userService) GetUserByID(id string) (*models.User, error) {
 
 func (s *userService) ListUsers(offset, limit int) ([]models.User, error) {
 	return s.userRepo.List(offset, limit)
+}
+
+func (s *userService) UpdateUser(u *models.User) error {
+	return s.userRepo.Update(u)
+}
+
+func (s *userService) DeleteUser(id uint) error {
+	return s.userRepo.Delete(id)
 }

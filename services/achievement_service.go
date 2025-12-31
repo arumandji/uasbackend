@@ -1,55 +1,64 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"time"
+
 	"uas_backend/models"
 	"uas_backend/repositories"
-
 )
 
 type AchievementService interface {
-	CreateAchievement(a *models.Achievement) (string, error)
-	GetAchievementByID(mongoID string) (*models.Achievement, error)
+	CreateAchievement(a *models.Achievement) error
+	GetAchievementByID(mongoID string) (map[string]interface{}, error)
 	SubmitForVerification(refID string) error
+	Update(a *models.Achievement) error
+	Delete(id uint) error
 }
 
 type achievementService struct {
-	achRepo      repositories.AchievementMongoRepository
-	refRepo      repositories.AchievementRefRepository
+	achRepo        *repositories.AchievementMongoRepository
+	refRepo        repositories.AchievementRefRepository
 	mahasiswaRepo  repositories.MahasiswaRepository
 }
 
-func NewAchievementService(achRepo repositories.AchievementMongoRepository, refRepo repositories.AchievementRefRepository, stuRepo repositories.MahasiswaRepository) AchievementService {
-	return &achievementService{achRepo: achRepo, refRepo: refRepo, mahasiswaRepo: stuRepo}
+func NewAchievementService(
+	achRepo *repositories.AchievementMongoRepository,
+	refRepo repositories.AchievementRefRepository,
+	stuRepo repositories.MahasiswaRepository,
+) AchievementService {
+	return &achievementService{
+		achRepo: achRepo,
+		refRepo: refRepo,
+		mahasiswaRepo: stuRepo,
+	}
 }
 
-func (s *achievementService) CreateAchievement(a *models.Achievement) (string, error) {
+func (s *achievementService) CreateAchievement(a *models.Achievement) error {
 	if a.MahasiswaID == "" {
-		return "", errors.New("mahasiswa_id required")
+		return errors.New("mahasiswa_id required")
 	}
-	id, err := s.achRepo.Create(a)
-	if err != nil {
-		return "", err
+
+	// simpan ke MongoDB
+	if err := s.achRepo.Create(context.Background(), a); err != nil {
+		return err
 	}
-	// Create reference in Postgres
+
+	// simpan referensi di PostgreSQL
 	ref := &models.AchievementReference{
-		ID:               generateUUID(),
-		MahasiswaID:        a.MahasiswaID,
-		MongoAchievement: id,
-		Status:           "draft",
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
+		ID:          generateUUID(),
+		MahasiswaID: a.MahasiswaID,
+		Status:      "draft",
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
-	if err := s.refRepo.Create(ref); err != nil {
-		// optional: rollback mongo doc (not implemented)
-		return "", err
-	}
-	return id, nil
+
+	return s.refRepo.Create(ref)
 }
 
-func (s *achievementService) GetAchievementByID(mongoID string) (*models.Achievement, error) {
-	return s.achRepo.FindByID(mongoID)
+func (s *achievementService) GetAchievementByID(mongoID string) (map[string]interface{}, error) {
+	return s.achRepo.FindByID(context.Background(), mongoID)
 }
 
 func (s *achievementService) SubmitForVerification(refID string) error {
@@ -57,16 +66,28 @@ func (s *achievementService) SubmitForVerification(refID string) error {
 	if err != nil {
 		return err
 	}
+
 	if ref.Status != "draft" {
 		return errors.New("only draft can be submitted")
 	}
+
 	now := time.Now()
 	ref.Status = "submitted"
 	ref.SubmittedAt = &now
+	ref.UpdatedAt = now
+
 	return s.refRepo.Update(ref)
 }
 
-// generateUUID is a simple generator wrapper, you may replace with github.com/google/uuid
+// sederhana & cukup untuk UAS
 func generateUUID() string {
-	return time.Now().Format("20060102150405") // placeholder; replace with uuid.NewString()
+	return time.Now().Format("20060102150405")
+}
+
+func (s *achievementService) Update(a *models.Achievement) error {
+	return s.achRepo.Update(context.Background(), a)
+}
+
+func (s *achievementService) Delete(id uint) error {
+	return s.achRepo.Delete(context.Background(), id)
 }

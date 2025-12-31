@@ -6,29 +6,68 @@ import (
 	"uas_backend/middleware"
 )
 
-func RegisterRoutes(r *gin.Engine) {
+type RouteConfig struct {
+	MahasiswaHandler *handlers.MahasiswaHandler
+	DosenHandler     *handlers.DosenHandler
+}
 
-	// Public
-	auth := r.Group("/api/auth")
+func RegisterRoutes(r *gin.Engine, h RouteConfig) {
+
+	v1 := r.Group("/api/v1")
+
+	// ================= AUTH =================
+	auth := v1.Group("/auth")
 	{
 		auth.POST("/login", handlers.LoginHandler)
+		auth.POST("/logout", middleware.JWTAuth(), handlers.LogoutHandler)
+		auth.POST("/refresh", middleware.JWTAuth(), handlers.RefreshHandler)
+		auth.GET("/profile", middleware.JWTAuth(), handlers.ProfileHandler)
 	}
 
-	// Protected
-	api := r.Group("/api")
+	// ================= PROTECTED =================
+	api := v1.Group("")
 	api.Use(middleware.JWTAuth())
 	{
-		api.GET("/profile", handlers.ProfileHandler)
-
-		user := api.Group("/users")
+		// ---------- USERS (ADMIN) ----------
+		users := api.Group("/users")
 		{
-			user.GET("/", handlers.GetUsers)
+			users.GET("/", handlers.GetUsers)
+			users.PUT("/:id", handlers.UpdateUser)
+			users.DELETE("/:id", handlers.DeleteUser)
 		}
 
-		achievement := api.Group("/achievements")
+		// ---------- ACHIEVEMENTS ----------
+		achievements := api.Group("/achievements")
 		{
-			achievement.GET("/", handlers.GetAllAchievements)
-			achievement.POST("/", handlers.CreateAchievement)
+			achievements.GET("/", handlers.GetAllAchievements)
+			achievements.POST("/", handlers.CreateAchievement)
+			achievements.GET("/me", handlers.GetMyAchievements)
+			achievements.PUT("/:id", handlers.UpdateAchievement)
+			achievements.DELETE("/:id", handlers.DeleteAchievement)
+		}
+
+		// ---------- MAHASISWA ----------
+		mahasiswa := api.Group("/mahasiswa")
+		{
+			mahasiswa.GET("/:id", h.MahasiswaHandler.GetMahasiswaByID)
+			mahasiswa.GET("/user/:user_id", h.MahasiswaHandler.GetMahasiswaByUserID)
+			mahasiswa.GET("/dosen/:dosen_wali_id", h.MahasiswaHandler.GetMahasiswaByAdvisor)
+			mahasiswa.POST("/", h.MahasiswaHandler.CreateMahasiswa)
+			mahasiswa.PUT("/:id", h.MahasiswaHandler.UpdateMahasiswa)
+			mahasiswa.DELETE("/:id", h.MahasiswaHandler.DeleteMahasiswa)
+
+		}
+
+		// ---------- DOSEN ----------
+		dosen := api.Group("/dosen")
+		{
+			dosen.GET("/", h.DosenHandler.GetAllDosen)
+			dosen.GET("/:id", h.DosenHandler.GetDosenByID)
+			dosen.GET("/user/:user_id", h.DosenHandler.GetDosenByUserID)
+			dosen.POST("/", h.DosenHandler.CreateDosen)
+			dosen.PUT("/:id", h.DosenHandler.UpdateDosen)
+			dosen.DELETE("/:id", h.DosenHandler.DeleteDosen)
+
 		}
 	}
 }

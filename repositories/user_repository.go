@@ -12,6 +12,7 @@ type UserRepository interface {
 	FindByID(id string) (*models.User, error)
 	List(offset, limit int) ([]models.User, error)
 	Update(user *models.User) error
+	Delete(id uint) error
 }
 
 type userRepo struct {
@@ -52,4 +53,8 @@ func (r *userRepo) List(offset, limit int) ([]models.User, error) {
 
 func (r *userRepo) Update(user *models.User) error {
 	return r.db.Save(user).Error
+}
+
+func (r *userRepo) Delete(id uint) error {
+	return r.db.Delete(&models.User{}, id).Error
 }

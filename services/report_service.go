@@ -1,26 +1,29 @@
 package services
 
 import (
+	"context"
+
 	"uas_backend/repositories"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 type ReportService interface {
-	GetStatistics() (bson.M, error)
+	GetAchievementStats() ([]bson.M, error)
 }
 
 type reportService struct {
-	achMongoRepo repositories.AchievementMongoRepository
+	achMongoRepo *repositories.AchievementMongoRepository
 }
 
-func NewReportService(achRepo repositories.AchievementMongoRepository) ReportService {
-	return &reportService{achMongoRepo: achRepo}
+func NewReportService(achMongoRepo *repositories.AchievementMongoRepository) ReportService {
+	return &reportService{
+		achMongoRepo: achMongoRepo,
+	}
 }
 
-// GetStatistics aggregates achievement data from MongoDB
-func (s *reportService) GetStatistics() (bson.M, error) {
-	stats, err := s.achMongoRepo.AggregateStats()
+func (s *reportService) GetAchievementStats() ([]bson.M, error) {
+	stats, err := s.achMongoRepo.AggregateStats(context.Background())
 	if err != nil {
 		return nil, err
 	}
